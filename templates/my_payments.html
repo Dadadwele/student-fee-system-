@@ -1,0 +1,139 @@
+{% extends 'base.html' %}
+{% block title %}My Payments & Fees{% endblock %}
+{% block page_title %}Payment History{% endblock %}
+
+{% block content %}
+
+{% if profile %}
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="card stat-card p-3">
+            <div class="text-muted small">Total Fees</div>
+            <div class="fs-5 fw-bold">R {{ profile.total_fees|floatformat:2 }}</div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card stat-card success p-3">
+            <div class="text-muted small">Paid</div>
+            <div class="fs-5 fw-bold text-success">R {{ profile.fees_paid|floatformat:2 }}</div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card stat-card danger p-3">
+            <div class="text-muted small">Outstanding</div>
+            <div class="fs-5 fw-bold text-danger">R {{ profile.outstanding_balance|floatformat:2 }}</div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<div class="card mb-4">
+    <div class="card-header bg-white"><strong>My Fees</strong></div>
+    <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead>
+                <tr>
+                    <th>Description</th>
+                    <th>Total</th>
+                    <th>Paid</th>
+                    <th>Remaining</th>
+                    <th>Due Date</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for fee in fees %}
+                <tr>
+                    <td>{{ fee.fee_item|default:fee.description }}</td>
+                    <td>R {{ fee.total_amount|floatformat:2 }}</td>
+                    <td>R {{ fee.paid_amount|floatformat:2 }}</td>
+                    <td>R {{ fee.remaining_amount|floatformat:2 }}</td>
+                    <td>{{ fee.due_date|default:"—" }}</td>
+                    <td>
+                        <span class="badge bg-{% if fee.status == 'Paid' %}success{% elif fee.status == 'Partial' %}warning{% elif fee.status == 'Overdue' %}danger{% else %}secondary{% endif %}">
+                            {{ fee.status }}
+                        </span>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="6" class="text-center text-muted">No fees assigned yet.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header bg-white">
+        <div class="d-flex flex-wrap justify-content-between align-items-end gap-3">
+            <strong>Payment History</strong>
+            <form method="get" class="d-flex flex-wrap align-items-end gap-2">
+                <div>
+                    <label class="form-label small mb-1">From</label>
+                    <input type="date" name="from" value="{{ from_date }}" class="form-control form-control-sm">
+                </div>
+                <div>
+                    <label class="form-label small mb-1">To</label>
+                    <input type="date" name="to" value="{{ to_date }}" class="form-control form-control-sm">
+                </div>
+                <div>
+                    <label class="form-label small mb-1">Status</label>
+                    <select name="status" class="form-select form-select-sm">
+                        <option value="" {% if not status %}selected{% endif %}>All</option>
+                        <option value="Confirmed" {% if status == 'Confirmed' %}selected{% endif %}>Confirmed</option>
+                        <option value="Pending" {% if status == 'Pending' %}selected{% endif %}>Pending</option>
+                        <option value="Rejected" {% if status == 'Rejected' %}selected{% endif %}>Rejected</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-sm btn-primary">
+                    <i class="bi bi-funnel"></i> Filter
+                </button>
+                <a href="{% url 'download_payment_statement' %}?from={{ from_date }}&to={{ to_date }}&status={{ status }}"
+                   class="btn btn-sm btn-outline-primary">
+                    <i class="bi bi-download"></i> Download Statement (PDF)
+                </a>
+            </form>
+        </div>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Amount</th>
+                    <th>Method</th>
+                    <th>Reference</th>
+                    <th>Receipt</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for p in payments %}
+                <tr>
+                    <td>{{ p.payment_date }}</td>
+                    <td>R {{ p.amount|floatformat:2 }}</td>
+                    <td>{{ p.payment_method }}</td>
+                    <td>{{ p.reference_number|default:"—" }}</td>
+                    <td>{{ p.receipt_number|default:"—" }}</td>
+                    <td>
+                        <span class="badge bg-{% if p.status == 'Confirmed' %}success{% elif p.status == 'Pending' %}warning{% else %}danger{% endif %}">
+                            {{ p.status }}
+                        </span>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="6" class="text-center text-muted">No payments match this filter.</td></tr>
+                {% endfor %}
+            </tbody>
+            {% if payments %}
+            <tfoot>
+                <tr class="fw-bold">
+                    <td colspan="4" class="text-end">Total Paid (Confirmed, filtered)</td>
+                    <td colspan="2">R {{ total_paid_filtered|floatformat:2 }}</td>
+                </tr>
+            </tfoot>
+            {% endif %}
+        </table>
+    </div>
+</div>
+{% endblock %}i

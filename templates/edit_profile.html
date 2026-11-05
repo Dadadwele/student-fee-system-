@@ -1,0 +1,112 @@
+{% extends 'base.html' %}
+{% block title %}Edit Profile{% endblock %}
+{% block page_title %}Edit Profile{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header bg-white">
+        <strong>Edit Student Profile</strong>
+    </div>
+    <div class="card-body">
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+
+            {% if form.errors %}
+                <div class="alert alert-danger">
+                    Please correct the errors below.
+                    {{ form.errors }}
+                </div>
+            {% endif %}
+
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label">Programme</label>
+                    <input type="text" name="programme" class="form-control"
+                           value="{{ form.programme.value|default_if_none:'' }}">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Qualification</label>
+                    <input type="text" name="qualification" class="form-control"
+                           placeholder="e.g. National Certificate (Vocational)"
+                           value="{{ form.qualification.value|default_if_none:'' }}">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Faculty</label>
+                    <input type="text" name="faculty" class="form-control"
+                           value="{{ form.faculty.value|default_if_none:'' }}">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Campus</label>
+                    <input type="text" name="campus" class="form-control"
+                           value="{{ form.campus.value|default_if_none:'' }}">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Academic Year</label>
+                    <input type="number" name="academic_year" class="form-control"
+                           value="{{ form.academic_year.value|default_if_none:'2026' }}">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Year of Study</label>
+                    <input type="number" name="year_of_study" class="form-control" min="1" max="6"
+                           value="{{ form.year_of_study.value|default_if_none:'1' }}">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Study Mode</label>
+                    <select name="study_mode" class="form-select">
+                        <option value="Full-Time" {% if form.study_mode.value == 'Full-Time' %}selected{% endif %}>Full-Time</option>
+                        <option value="Part-Time" {% if form.study_mode.value == 'Part-Time' %}selected{% endif %}>Part-Time</option>
+                        <option value="Distance" {% if form.study_mode.value == 'Distance' %}selected{% endif %}>Distance Learning</option>
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Enrollment Status</label>
+                    <select name="enrollment_status" class="form-select">
+                        <option value="Active" {% if form.enrollment_status.value == 'Active' %}selected{% endif %}>Active</option>
+                        <option value="Inactive" {% if form.enrollment_status.value == 'Inactive' %}selected{% endif %}>Inactive</option>
+                        <option value="Graduated" {% if form.enrollment_status.value == 'Graduated' %}selected{% endif %}>Graduated</option>
+                        <option value="Suspended" {% if form.enrollment_status.value == 'Suspended' %}selected{% endif %}>Suspended</option>
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Registration Date</label>
+                    <input type="date" name="registration_date" class="form-control"
+                           value="{{ form.registration_date.value|default_if_none:'' }}">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Phone</label>
+                    <input type="text" name="phone" class="form-control"
+                           value="{{ form.phone.value|default_if_none:'' }}">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Date of Birth</label>
+                    <input type="date" name="date_of_birth" class="form-control"
+                           value="{{ form.date_of_birth.value|default_if_none:'' }}">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">City</label>
+                    <input type="text" name="city" class="form-control"
+                           value="{{ form.city.value|default_if_none:'' }}">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Province</label>
+                    <input type="text" name="province" class="form-control"
+                           value="{{ form.province.value|default_if_none:'' }}">
+                </div>
+                <div class="col-12">
+                    <label class="form-label">Address</label>
+                    <textarea name="address" class="form-control" rows="3">{{ form.address.value|default_if_none:'' }}</textarea>
+                </div>
+                <div class="col-12">
+                    <label class="form-label">Profile Photo</label>
+                    <input type="file" name="photo" class="form-control" accept="image/*">
+                </div>
+            </div>
+
+            <div class="mt-4 d-flex gap-2">
+                <button type="submit" class="btn btn-primary">Save Changes</button>
+                <a href="{% url 'profile' %}" class="btn btn-outline-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

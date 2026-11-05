@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+{% block title %}Add Staff{% endblock %}
+{% block page_title %}Add Staff Member{% endblock %}
+
+{% block content %}
+<div class="card" style="max-width: 640px;">
+    <div class="card-body">
+        <form method="post">
+            {% csrf_token %}
+            {% for field in form %}
+                <div class="mb-3">
+                    <label class="form-label">{{ field.label }}</label>
+                    {{ field }}
+                    {% if field.help_text %}<div class="form-text">{{ field.help_text|safe }}</div>{% endif %}
+                    {% for error in field.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+                </div>
+            {% endfor %}
+            <button type="submit" class="btn btn-primary">Create Staff Account</button>
+            <a href="{% url 'hr_staff_list' %}" class="btn btn-outline-secondary">Cancel</a>
+        </form>
+    </div>
+</div>
+{% endblock %}

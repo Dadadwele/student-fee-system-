@@ -1,0 +1,262 @@
+{% extends 'base.html' %}
+{% block title %}Record Payment{% endblock %}
+{% block page_title %}Payment Recording (Admin){% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- Form -->
+    <div class="col-lg-5">
+        <div class="card mb-4">
+            <div class="card-header bg-white">
+                <strong>Record New Payment</strong>
+            </div>
+            <div class="card-body">
+                <form method="post" enctype="multipart/form-data" id="payment-form">
+                    {% csrf_token %}
+
+                    {% if form.errors %}
+                        <div class="alert alert-danger">
+                            Please correct the errors below.
+                            {{ form.errors }}
+                        </div>
+                    {% endif %}
+
+                    <div class="mb-3">
+                        <label class="form-label">Student *</label>
+                        {% include "includes/student_picker.html" with with_fees=True selected=selected_student %}
+                    </div>
+
+                    <div class="row g-2 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Full Name</label>
+                            <input type="text" id="preview_name" class="form-control" readonly>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Programme</label>
+                            <input type="text" id="preview_programme" class="form-control" readonly>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Linked Fee (optional)</label>
+                        <select name="fee" id="id_fee" class="form-select">
+                            <option value="">— None / general payment —</option>
+                        </select>
+                        <div class="form-text">
+                            Pick a student first — their unpaid fees will appear here. Leave as "None" for a
+                            general payment; it still reduces the amount owed on their fee statement.
+                        </div>
+                    </div>
+
+                    <div class="row g-2">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Amount (R) *</label>
+                            <input type="number" name="amount" class="form-control" step="0.01" min="0.01" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Payment Date *</label>
+                            <input type="date" name="payment_date" id="id_payment_date" class="form-control" required>
+                        </div>
+                    </div>
+
+                    <div class="row g-2">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Payment Method</label>
+                            <select name="payment_method" class="form-select">
+                                <option value="EFT">EFT / Online Banking</option>
+                                <option value="Cash">Cash</option>
+                                <option value="Card">Card Payment</option>
+                                <option value="Bank Deposit">Bank Deposit</option>
+                                <option value="NSFAS">NSFAS / Bursary</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Reference Number</label>
+                            <input type="text" name="reference_number" class="form-control">
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Fee Item (for reporting)</label>
+                        <select name="fee_item" class="form-select">
+                            <option value="">— None —</option>
+                            {% for item in form.fields.fee_item.queryset %}
+                                <option value="{{ item.pk }}">{{ item.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Status</label>
+                        <select name="status" class="form-select">
+                            <option value="Pending">Pending Verification</option>
+                            <option value="Confirmed" selected>Confirmed</option>
+                            <option value="Rejected">Rejected</option>
+                        </select>
+                        <div class="form-text">
+                            Receipt number is generated automatically once a payment is Confirmed.
+                            Only Confirmed payments are subtracted from the amount owed.
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Upload Proof of Payment</label>
+                        <input type="file" name="proof_of_payment" class="form-control" accept=".pdf,image/*">
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Notes</label>
+                        <textarea name="notes" class="form-control" rows="2"></textarea>
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary flex-fill">
+                            <i class="bi bi-check-circle"></i> Record Payment
+                        </button>
+                        <button type="reset" class="btn btn-outline-secondary">Reset</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pending + Recent -->
+    <div class="col-lg-7">
+        <div class="card mb-4">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                <strong>Pending Payments</strong>
+                <span class="badge bg-warning text-dark">{{ pending_payments|length }} awaiting review</span>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Student</th>
+                            <th>Amount</th>
+                            <th>Method</th>
+                            <th>Proof</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for p in pending_payments %}
+                        <tr>
+                            <td>{{ p.payment_date }}</td>
+                            <td>
+                                {{ p.student.student_number }}
+                                <div class="text-muted small">{{ p.student.user.get_full_name }}</div>
+                            </td>
+                            <td>R {{ p.amount|floatformat:2 }}</td>
+                            <td>{{ p.payment_method }}</td>
+                            <td>
+                                {% if p.proof_of_payment %}
+                                    <a href="{{ p.proof_of_payment.url }}" target="_blank">View</a>
+                                {% else %}
+                                    <span class="text-muted">—</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-nowrap">
+                                <form method="post" action="{% url 'confirm_payment' p.pk %}" class="d-inline">
+                                    {% csrf_token %}
+                                    <button class="btn btn-sm btn-success" title="Confirm">
+                                        <i class="bi bi-check-lg"></i>
+                                    </button>
+                                </form>
+                                <form method="post" action="{% url 'reject_payment' p.pk %}" class="d-inline">
+                                    {% csrf_token %}
+                                    <button class="btn btn-sm btn-outline-danger" title="Reject">
+                                        <i class="bi bi-x-lg"></i>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center text-muted py-4">Nothing waiting on you right now.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header bg-white">
+                <strong>Recent Payments</strong>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Receipt</th>
+                            <th>Student</th>
+                            <th>Amount</th>
+                            <th>Method</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for p in recent_payments %}
+                        <tr>
+                            <td>{{ p.payment_date }}</td>
+                            <td>{{ p.receipt_number|default:"—" }}</td>
+                            <td>{{ p.student.student_number }}</td>
+                            <td>R {{ p.amount|floatformat:2 }}</td>
+                            <td>{{ p.payment_method }}</td>
+                            <td>
+                                <span class="badge bg-{% if p.status == 'Confirmed' %}success{% elif p.status == 'Pending' %}warning{% else %}danger{% endif %}">
+                                    {{ p.status }}
+                                </span>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center text-muted py-4">No payments recorded yet.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const feeSelect = document.getElementById('id_fee');
+    const previewName = document.getElementById('preview_name');
+    const previewProgramme = document.getElementById('preview_programme');
+    const dateInput = document.getElementById('id_payment_date');
+    const NO_FEE = '<option value="">— None / general payment —</option>';
+
+    function today() { return new Date().toISOString().slice(0, 10); }
+    if (!dateInput.value) dateInput.value = today();
+
+    // A student was picked in the search box → show their details and unpaid fees
+    document.addEventListener('student-selected', ev => {
+        const s = ev.detail;
+        previewName.value = s.name || '';
+        previewProgramme.value = s.programme || '';
+        feeSelect.innerHTML = NO_FEE;
+        (s.fees || []).forEach(f => {
+            const opt = document.createElement('option');
+            opt.value = f.id;
+            opt.textContent = f.label;
+            feeSelect.appendChild(opt);
+        });
+    });
+
+    // Student cleared / form reset
+    document.addEventListener('student-cleared', () => {
+        previewName.value = '';
+        previewProgramme.value = '';
+        feeSelect.innerHTML = NO_FEE;
+    });
+
+    document.getElementById('payment-form').addEventListener('reset', () => {
+        setTimeout(() => { dateInput.value = today(); }, 0);
+    });
+</script>
+{% endblock %}

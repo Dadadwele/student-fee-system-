@@ -1,0 +1,143 @@
+{# Searchable student picker. Usage: {% include "includes/student_picker.html" with with_fees=True selected=selected_student %} #}
+<div class="position-relative" id="student_picker"
+     data-url="{% url 'student_search' %}" data-with-fees="{% if with_fees %}1{% endif %}">
+    <input type="hidden" name="student" id="id_student" value="{{ selected.pk|default:'' }}">
+    <div class="input-group">
+        <span class="input-group-text"><i class="bi bi-search"></i></span>
+        <input type="text" id="student_search_input" class="form-control" autocomplete="off"
+               placeholder="Type a name or student number…"
+               value="{% if selected %}{{ selected.student_number }} – {{ selected.user.get_full_name|default:selected.user.username }}{% endif %}">
+        <button type="button" class="btn btn-outline-secondary" id="student_clear" title="Clear">&times;</button>
+    </div>
+    <div id="student_results" class="list-group position-absolute w-100 shadow"
+         style="z-index:1050; display:none; max-height:280px; overflow-y:auto;"></div>
+    <div class="form-text" id="student_picker_hint">Start typing a name or student number, then click the student.</div>
+</div>
+
+<script>
+(function () {
+    const root = document.getElementById('student_picker');
+    if (!root) return;
+    const url = root.dataset.url;
+    const withFees = root.dataset.withFees === '1';
+    const hidden = document.getElementById('id_student');
+    const input = document.getElementById('student_search_input');
+    const results = document.getElementById('student_results');
+    const hint = document.getElementById('student_picker_hint');
+    const clearBtn = document.getElementById('student_clear');
+    const form = root.closest('form');
+    let timer = null, items = [], active = -1, reqId = 0;
+
+    function hideResults() { results.style.display = 'none'; active = -1; }
+    function setHint(text, cls) { hint.textContent = text; hint.className = 'form-text ' + (cls || ''); }
+
+    function render(list) {
+        items = list; results.innerHTML = ''; active = -1;
+        if (!list.length) {
+            const empty = document.createElement('div');
+            empty.className = 'list-group-item text-muted small';
+            empty.textContent = 'No students found';
+            results.appendChild(empty);
+            results.style.display = 'block';
+            return;
+        }
+        list.forEach((s, i) => {
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'list-group-item list-group-item-action';
+            const top = document.createElement('div');
+            top.className = 'fw-semibold';
+            top.textContent = s.name;
+            const sub = document.createElement('div');
+            sub.className = 'small text-muted';
+            sub.textContent = s.student_number + ' · ' + s.programme + ' · Owes R ' + s.owing;
+            btn.append(top, sub);
+            btn.addEventListener('mousedown', ev => { ev.preventDefault(); choose(i); });
+            results.appendChild(btn);
+        });
+        results.style.display = 'block';
+    }
+
+    function choose(i) {
+        const s = items[i];
+        if (!s) return;
+        hidden.value = s.id;
+        input.value = s.label;
+        input.classList.remove('is-invalid');
+        hideResults();
+        setHint('Selected: ' + s.name, 'text-success');
+        document.dispatchEvent(new CustomEvent('student-selected', { detail: s }));
+    }
+
+    function clearSelection(keepText) {
+        const had = hidden.value !== '';
+        hidden.value = '';
+        if (!keepText) input.value = '';
+        setHint('Start typing a name or student number, then click the student.', '');
+        if (had) document.dispatchEvent(new CustomEvent('student-cleared'));
+    }
+
+    function search() {
+        const q = input.value.trim();
+        if (!q) { hideResults(); return; }
+        const myReq = ++reqId;
+        const params = new URLSearchParams({ q: q });
+        if (withFees) params.set('fees', '1');
+        fetch(url + '?' + params.toString(), { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+            .then(r => r.json())
+            .then(data => { if (myReq === reqId) render(data.results || []); })
+            .catch(() => setHint('Search failed — please try again.', 'text-danger'));
+    }
+
+    input.addEventListener('input', () => {
+        if (hidden.value) clearSelection(true);
+        clearTimeout(timer);
+        timer = setTimeout(search, 250);
+    });
+
+    input.addEventListener('keydown', ev => {
+        const btns = results.querySelectorAll('button');
+        if (ev.key === 'ArrowDown' && btns.length) {
+            ev.preventDefault(); active = (active + 1) % btns.length;
+        } else if (ev.key === 'ArrowUp' && btns.length) {
+            ev.preventDefault(); active = (active - 1 + btns.length) % btns.length;
+        } else if (ev.key === 'Enter' && results.style.display === 'block' && items.length) {
+            ev.preventDefault(); choose(active >= 0 ? active : 0); return;
+        } else if (ev.key === 'Escape') {
+            hideResults(); return;
+        } else {
+            return;
+        }
+        btns.forEach((b, i) => b.classList.toggle('active', i === active));
+    });
+
+    input.addEventListener('blur', () => setTimeout(hideResults, 150));
+    clearBtn.addEventListener('click', () => { clearSelection(false); hideResults(); input.focus(); });
+
+    if (form) {
+        form.addEventListener('submit', ev => {
+            if (!hidden.value) {
+                ev.preventDefault();
+                input.classList.add('is-invalid');
+                setHint('Please search for a student and click one of the results.', 'text-danger');
+                input.focus();
+            }
+        });
+        form.addEventListener('reset', () => {
+            setTimeout(() => { clearSelection(false); hideResults(); }, 0);
+        });
+    }
+
+    // Page re-shown after a validation error: restore the student's preview / fee list
+    if (hidden.value && withFees) {
+        fetch(url + '?id=' + encodeURIComponent(hidden.value) + '&fees=1')
+            .then(r => r.json())
+            .then(data => {
+                if (data.results && data.results[0]) {
+                    items = data.results;
+                    document.dispatchEvent(new CustomEvent('student-selected', { detail: data.results[0] }));
+                }
+            });
+    }
+})();
+</script>

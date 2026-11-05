@@ -1,0 +1,107 @@
+{% extends 'base.html' %}
+{% block title %}My Profile{% endblock %}
+{% block page_title %}My Profile{% endblock %}
+
+{% block content %}
+
+{% if profile %}
+<div class="row">
+    <div class="col-lg-4">
+        <div class="card mb-4 text-center">
+            <div class="card-body">
+                {% if profile.photo %}
+                    <img src="{{ profile.photo.url }}" class="rounded-circle mb-3" style="width:120px;height:120px;object-fit:cover;">
+                {% else %}
+                    <div class="bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width:120px;height:120px;font-size:2.5rem;">
+                        {{ profile.user.first_name|first|default:"S"|upper }}
+                    </div>
+                {% endif %}
+                <h5 class="mb-1">{{ profile.user.get_full_name|default:profile.user.username }}</h5>
+                <div class="text-muted">{{ profile.student_number }}</div>
+                <div class="mt-2">
+                    <span class="badge {% if profile.enrollment_status == 'Active' %}badge-active{% else %}bg-secondary{% endif %}">
+                        {{ profile.enrollment_status }}
+                    </span>
+                </div>
+                <a href="{% url 'edit_profile' %}" class="btn btn-outline-primary btn-sm mt-3">
+                    <i class="bi bi-pencil"></i> Edit Profile
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-8">
+        <div class="card mb-4">
+            <div class="card-header bg-white"><strong>Personal Information</strong></div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <div class="text-muted small">Email</div>
+                        <div>{{ profile.user.email|default:"—" }}</div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="text-muted small">Phone</div>
+                        <div>{{ profile.phone|default:"—" }}</div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="text-muted small">Programme</div>
+                        <div>{{ profile.programme|default:"—" }}</div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="text-muted small">Faculty</div>
+                        <div>{{ profile.faculty|default:"—" }}</div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="text-muted small">Campus</div>
+                        <div>{{ profile.campus|default:"—" }}</div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="text-muted small">Year of Study</div>
+                        <div>{{ profile.year_of_study }}</div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="text-muted small">Study Mode</div>
+                        <div>{{ profile.study_mode }}</div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="text-muted small">Academic Year</div>
+                        <div>{{ profile.academic_year }}</div>
+                    </div>
+                    <div class="col-12">
+                        <div class="text-muted small">Address</div>
+                        <div>{{ profile.address|default:"—" }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Fee Summary -->
+        <div class="row g-3">
+            <div class="col-md-4">
+                <div class="stat-card">
+                    <div class="text-muted small">Total Fees</div>
+                    <div class="fs-5 fw-bold">R {{ profile.total_fees|floatformat:2 }}</div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="stat-card success">
+                    <div class="text-muted small">Paid</div>
+                    <div class="fs-5 fw-bold text-success">R {{ profile.fees_paid|floatformat:2 }}</div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="stat-card danger">
+                    <div class="text-muted small">Outstanding</div>
+                    <div class="fs-5 fw-bold text-danger">R {{ profile.outstanding_balance|floatformat:2 }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% else %}
+    <div class="alert alert-warning">
+        Profile not found. <a href="{% url 'edit_profile' %}">Complete your profile</a>
+    </div>
+{% endif %}
+
+{% endblock %}

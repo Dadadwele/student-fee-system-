@@ -1,0 +1,81 @@
+{% extends 'base.html' %}
+{% block title %}Proof of Registration{% endblock %}
+{% block page_title %}Proof of Registration{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-5">
+        <div class="card mb-4">
+            <div class="card-header bg-white">
+                <strong>Upload Proof of Registration</strong>
+            </div>
+            <div class="card-body">
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    {% if form.errors %}
+                        <div class="alert alert-danger">{{ form.errors }}</div>
+                    {% endif %}
+
+                    <div class="mb-3">
+                        <label class="form-label">Title</label>
+                        <input type="text" name="title" class="form-control" value="Proof of Registration">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Academic Year</label>
+                        <input type="number" name="academic_year" class="form-control" value="2026">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Document (PDF / Image) *</label>
+                        <input type="file" name="document" class="form-control" accept=".pdf,image/*" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Notes</label>
+                        <textarea name="notes" class="form-control" rows="2"></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="bi bi-upload"></i> Upload Document
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-7">
+        <div class="card">
+            <div class="card-header bg-white">
+                <strong>My Uploaded Documents</strong>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th>Title</th>
+                            <th>Academic Year</th>
+                            <th>Uploaded</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for p in proofs %}
+                        <tr>
+                            <td>{{ p.title }}</td>
+                            <td>{{ p.academic_year }}</td>
+                            <td>{{ p.uploaded_at|date:"d M Y H:i" }}</td>
+                            <td>
+                                <a href="{{ p.document.url }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                                    View
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="4" class="text-center text-muted py-4">No documents uploaded yet.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

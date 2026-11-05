@@ -1,0 +1,98 @@
+{% extends 'base.html' %}
+{% block title %}Upload Fee Statement{% endblock %}
+{% block page_title %}Upload Fee Statement{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-5">
+        <div class="card mb-4">
+            <div class="card-header bg-white">
+                <strong>Upload New Statement</strong>
+            </div>
+            <div class="card-body">
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    {% if form.errors %}
+                        <div class="alert alert-danger">{{ form.errors }}</div>
+                    {% endif %}
+
+                    <div class="mb-3">
+                        <label class="form-label">Title *</label>
+                        <input type="text" name="title" class="form-control" placeholder="e.g. 2026 Fee Statement" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Statement Date</label>
+                        <input type="date" name="statement_date" class="form-control">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">File (PDF) *</label>
+                        <input type="file" name="statement_file" class="form-control" accept=".pdf" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Notes</label>
+                        <textarea name="notes" class="form-control" rows="2"></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="bi bi-upload"></i> Upload Statement
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-7">
+        <div class="card">
+            <div class="card-header bg-white">
+                <strong>My Uploaded Statements</strong>
+            </div>
+            <div class="table-responsive">
+                                <table class="table table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th>Title</th>
+                            <th>Date</th>
+                            <th>Total Fees</th>
+                            <th>Paid</th>
+                            <th>Outstanding</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for s in statements %}
+                        <tr>
+                            <td>
+                                {{ s.title }}
+                                <div class="text-muted small">{{ s.uploaded_at|date:"d M Y H:i" }}</div>
+                            </td>
+                            <td>{{ s.statement_date|default:"—" }}</td>
+                            <td>
+                                {% if s.total_fees is not None %}R{{ s.total_fees|floatformat:2 }}{% else %}—{% endif %}
+                            </td>
+                            <td>
+                                {% if s.fees_paid is not None %}R{{ s.fees_paid|floatformat:2 }}{% else %}—{% endif %}
+                            </td>
+                            <td>
+                                {% if s.outstanding is not None %}
+                                    <strong>R{{ s.outstanding|floatformat:2 }}</strong>
+                                {% else %}
+                                    <span class="text-muted" title="{{ s.extraction_error }}">Not read</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <a href="{{ s.statement_file.url }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                                    View
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center text-muted py-4">No statements uploaded yet.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

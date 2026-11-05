@@ -1,0 +1,77 @@
+{% extends 'base.html' %}
+{% block title %}Register{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-7">
+        <div class="card">
+            <div class="card-body p-4">
+                <h3 class="mb-4 text-center">Student Registration</h3>
+                <form method="post">
+                    {% csrf_token %}
+                    {% if form.errors %}
+                        <div class="alert alert-danger">
+                            <ul class="mb-0">
+                            {% for field in form %}
+                                {% for error in field.errors %}
+                                    <li>{{ field.label }}: {{ error }}</li>
+                                {% endfor %}
+                            {% endfor %}
+                            {% for error in form.non_field_errors %}
+                                <li>{{ error }}</li>
+                            {% endfor %}
+                            </ul>
+                        </div>
+                    {% endif %}
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">First Name *</label>
+                            <input type="text" name="first_name" class="form-control" required value="{{ form.first_name.value|default:'' }}">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Last Name *</label>
+                            <input type="text" name="last_name" class="form-control" required value="{{ form.last_name.value|default:'' }}">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Username *</label>
+                            <input type="text" name="username" class="form-control" required value="{{ form.username.value|default:'' }}">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Email *</label>
+                            <input type="email" name="email" class="form-control" required value="{{ form.email.value|default:'' }}">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Student Number *</label>
+                            <input type="text" name="student_number" class="form-control" required placeholder="e.g. ST2026001" value="{{ form.student_number.value|default:'' }}">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Phone Number</label>
+                            <input type="text" name="phone_number" class="form-control" value="{{ form.phone_number.value|default:'' }}">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Programme / Course</label>
+                            <input type="text" name="programme" class="form-control" placeholder="e.g. Information Technology" value="{{ form.programme.value|default:'' }}">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Year of Study</label>
+                            <input type="number" name="year_of_study" class="form-control" min="1" max="6" value="{{ form.year_of_study.value|default:'1' }}">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Password *</label>
+                            <input type="password" name="password1" class="form-control" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Confirm Password *</label>
+                            <input type="password" name="password2" class="form-control" required>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100 mt-4">Register</button>
+                </form>
+                <p class="text-center mt-3 mb-0">
+                    Already have an account? <a href="{% url 'login' %}">Login</a>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

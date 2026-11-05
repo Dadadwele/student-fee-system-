@@ -1,0 +1,102 @@
+{% extends 'base.html' %}
+{% block title %}Manage Fees{% endblock %}
+
+{% block content %}
+<h2 class="mb-4">Manage Fees</h2>
+
+<div class="row">
+    <div class="col-lg-5">
+        <div class="card mb-4">
+            <div class="card-header bg-white"><strong>Add New Fee</strong></div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    {% if form.errors %}
+                        <div class="alert alert-danger">{{ form.errors }}</div>
+                    {% endif %}
+                    <div class="mb-3">
+                       <div class="mb-3">
+                        <label class="form-label">Student *</label>
+                        {% include "includes/student_picker.html" with selected=selected_student %}
+                    </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Fee Item</label>
+                        <select name="fee_item" class="form-select">
+                            <option value="">— None —</option>
+                            {% for item in form.fields.fee_item.queryset %}
+                                <option value="{{ item.pk }}">{{ item.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Description</label>
+                        <input type="text" name="description" class="form-control">
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Amount (R) *</label>
+                            <input type="number" name="amount" class="form-control" step="0.01" required>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Discount (R)</label>
+                            <input type="number" name="discount" class="form-control" step="0.01" value="0">
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Fine (R)</label>
+                            <input type="number" name="fine" class="form-control" step="0.01" value="0">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Due Date</label>
+                        <input type="date" name="due_date" class="form-control">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Academic Year</label>
+                        <input type="number" name="academic_year" class="form-control" value="2026">
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">Add Fee</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-7">
+        <div class="card">
+            <div class="card-header bg-white"><strong>Recent Fees</strong></div>
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th>Student</th>
+                            <th>Description</th>
+                            <th>Total</th>
+                            <th>Paid</th>
+                            <th>Remaining</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for fee in fees %}
+                        <tr>
+                            <td>{{ fee.student.student_number }}</td>
+                            <td>{{ fee.fee_item|default:fee.description }}</td>
+                            <td>R {{ fee.total_amount|floatformat:2 }}</td>
+                            <td>R {{ fee.paid_amount|floatformat:2 }}</td>
+                            <td>R {{ fee.remaining_amount|floatformat:2 }}</td>
+                            <td>
+                                <span class="badge bg-{% if fee.status == 'Paid' %}success{% elif fee.status == 'Partial' %}warning{% elif fee.status == 'Overdue' %}danger{% else %}secondary{% endif %}">
+                                    {{ fee.status }}
+                                </span>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="6" class="text-center text-muted">No fees yet.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
